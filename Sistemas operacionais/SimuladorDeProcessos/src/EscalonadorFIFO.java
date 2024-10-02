@@ -19,6 +19,7 @@ class EscalonadorFIFO {
         while (!filaProcessos.isEmpty()) {
             Processo processo = filaProcessos.poll();  // Remove o processo da fila
             System.out.println("Executando " + processo);
+
             // Simula o tempo de execução (para simplificar, só mostra no console)
             try {
                 Thread.sleep(processo.tempoExecucao * 100);  // Multiplica por 100 para simular o tempo
@@ -26,6 +27,7 @@ class EscalonadorFIFO {
                 e.printStackTrace();
             }
             System.out.println("Processo " + processo.pid + " finalizado.");
+            System.out.println("\n");
         }
     }
 }

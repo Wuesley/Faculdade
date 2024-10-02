@@ -8,7 +8,11 @@ public class App {
         Processo p3 = new Processo(3, 8);   // Processo 3 - 8 segundos
         Processo p4 = new Processo(4, 3);   // Processo 4 - 3 segundos
 
-        // FIFO
+
+        //vetor de processo ?
+        // sorteio as ordens deles ?
+
+        // FIFO (o primeiro que chegar é a mulher do padre kkkk)
         EscalonadorFIFO fifo = new EscalonadorFIFO();
         fifo.adicionarProcesso(p1);
         fifo.adicionarProcesso(p2);
@@ -16,7 +20,7 @@ public class App {
         fifo.adicionarProcesso(p4);
         fifo.executar();
 
-        // SJF
+        // SJF (quem tem o menor tempo de processamento entra na fila)
         EscalonadorSJF sjf = new EscalonadorSJF();
         sjf.adicionarProcesso(p1);
         sjf.adicionarProcesso(p2);
