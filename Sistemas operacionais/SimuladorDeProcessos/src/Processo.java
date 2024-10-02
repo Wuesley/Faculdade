@@ -1,14 +1,19 @@
 class Processo {
-    int pid;            // Identificador do processo
-    int tempoExecucao;  // Tempo de execução do processo para o SJF
-    // int tempoChegada; // para o FIFO?
-    public Processo(int pid, int tempoExecucao) {
-        this.pid = pid;
+
+
+    int p_id;
+    int tempoExecucao;
+    int tempoChegada;
+    int tempoTotalExecucao;
+
+
+    public Processo(int p_id, int tempoExecucao) {
+        this.p_id = p_id;
         this.tempoExecucao = tempoExecucao;
     }
 
     @Override
     public String toString() {
-        return "Processo [PID: " + pid + ", Tempo Execução: " + tempoExecucao + "]";
+        return "Processo [PID: " + p_id + ", Tempo Execução: " + tempoExecucao + "]";
     }
 }

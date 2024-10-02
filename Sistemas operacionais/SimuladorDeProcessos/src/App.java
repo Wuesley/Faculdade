@@ -1,16 +1,31 @@
+import java.util.ArrayList;
+
 public class App {
 
     public static void main(String[] args) {
 
-        // Cria processos com diferentes tempos de execução
+        // Criamos os processos
         Processo p1 = new Processo(1, 5);   // Processo 1 - 5 segundos
         Processo p2 = new Processo(2, 2);   // Processo 2 - 2 segundos
         Processo p3 = new Processo(3, 8);   // Processo 3 - 8 segundos
         Processo p4 = new Processo(4, 3);   // Processo 4 - 3 segundos
 
+        // Precisamos de um arraylist de processo que serão executados?
+        // usaremos o tempo de chegada para executar os processos
 
-        //vetor de processo ?
-        // sorteio as ordens deles ?
+        ArrayList<Processo> lista_de_processos = new ArrayList<>();
+
+        public Processo entradaDoProcesso(){
+            lista_de_processos.add(p1);
+        }
+
+
+
+
+
+
+
+
 
         // FIFO (o primeiro que chegar é a mulher do padre kkkk)
         EscalonadorFIFO fifo = new EscalonadorFIFO();
