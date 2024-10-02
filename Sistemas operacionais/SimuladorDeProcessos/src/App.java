@@ -10,14 +10,7 @@ public class App {
         Processo p3 = new Processo(3, 8);   // Processo 3 - 8 segundos
         Processo p4 = new Processo(4, 3);   // Processo 4 - 3 segundos
 
-        // Precisamos de um arraylist de processo que serão executados?
-        // usaremos o tempo de chegada para executar os processos
 
-        ArrayList<Processo> lista_de_processos = new ArrayList<>();
-
-        public Processo entradaDoProcesso(){
-            lista_de_processos.add(p1);
-        }
 
 
 
