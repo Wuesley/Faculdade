@@ -79,10 +79,7 @@ void GeraGraphviz(FriendFace* RedeSocial, const char* NomeUsuario_arquivo) {
     for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
         Amizade* Adjacente = RedeSocial->usuarios[i].ListaAdjacenteacencia;
         while (Adjacente) {
-            fprintf(file, "  \"%s\" -> \"%s\" [label=\"%d\"];\n",
-                    RedeSocial->usuarios[i].NomeUsuario, 
-                    RedeSocial->usuarios[Adjacente->destino].NomeUsuario, 
-                    Adjacente->peso);
+            fprintf(file, "  \"%s\" -> \"%s\" [label=\"%d\"];\n",RedeSocial->usuarios[i].NomeUsuario, RedeSocial->usuarios[Adjacente->destino].NomeUsuario, Adjacente->peso);
             Adjacente = Adjacente->Proximo;
         }
     }
