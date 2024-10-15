@@ -6,7 +6,7 @@
 #define MAXIMO_USUARIOS 100
 #define TAMANHO_MAXIMO_DE_CADA_NOME 50
 
-//##################### structs
+//STRUCTS
 typedef struct Amizade {
     int destino;
     int peso;
@@ -23,10 +23,10 @@ typedef struct FriendFace {
     int NumeroDeUsuarios;
 } FriendFace;
 
-//#################################
+// Variável global para acessar a RedeSocial na função de comparação
+FriendFace* RedeGlobal = NULL;
 
-
-//##################### functions
+//FUNÇÕES
 FriendFace* CriaFriendFace() {
     FriendFace* RedeSocial = (FriendFace*)malloc(sizeof(FriendFace));
     RedeSocial->NumeroDeUsuarios = 0;
@@ -39,6 +39,7 @@ int EncontrarUsuario(FriendFace* RedeSocial, const char* NomeUsuario) {
             return i;
     }
     return -1;
+    printf("Erro ao tentar encontrar %s na rede de conexões.\n",NomeUsuario);  
 }
 
 void AdicionarUsuario(FriendFace* RedeSocial, const char* NomeUsuario) {
@@ -89,18 +90,48 @@ void GeraGraphviz(FriendFace* RedeSocial, const char* NomeUsuario_arquivo) {
     fclose(file);
 }
 
-// Algoritmo DFS
+// Função auxiliar para comparar os nomes dos usuários, usada para ordenar adjacências
+int CompararUsuarios(const void* a, const void* b) {
+    int Indice_1 = *(int*)a;
+    int Indice_2 = *(int*)b;
+    return strcmp(RedeGlobal->usuarios[Indice_1].NomeUsuario, RedeGlobal->usuarios[Indice_2].NomeUsuario);
+}
+
 void Dfs_util(FriendFace* RedeSocial, int idx, int visitados[]) {
     visitados[idx] = 1;
     printf("%s ", RedeSocial->usuarios[idx].NomeUsuario);
     
-    Amizade* Adjacente = RedeSocial->usuarios[idx].ListaAdjacenteacencia;
-    while (Adjacente) {
-        if (!visitados[Adjacente->destino]) {
-            Dfs_util(RedeSocial, Adjacente->destino, visitados);
-        }
-        Adjacente = Adjacente->Proximo;
+    // Contar quantos amigos o usuário tem
+    int NumeroDeAmigos = 0;
+    Amizade* adj = RedeSocial->usuarios[idx].ListaAdjacenteacencia;
+    while (adj) {
+        NumeroDeAmigos++;
+        adj = adj->Proximo;
     }
+    
+    // Criar uma lista temporária com os índices dos amigos
+    int* IndiceDosAmigos = (int*)malloc(NumeroDeAmigos * sizeof(int));
+    adj = RedeSocial->usuarios[idx].ListaAdjacenteacencia;
+    for (int i = 0; i < NumeroDeAmigos; i++) {
+        IndiceDosAmigos[i] = adj->destino;
+        adj = adj->Proximo;
+    }
+    
+    // Atribuir a rede social à variável global
+    RedeGlobal = RedeSocial;
+    
+    // Ordenar os amigos em ordem alfabética
+    qsort(IndiceDosAmigos, NumeroDeAmigos, sizeof(int), CompararUsuarios);
+    
+    // Percorrer os amigos em ordem alfabética
+    for (int i = 0; i < NumeroDeAmigos; i++) {
+        if (!visitados[IndiceDosAmigos[i]]) {
+            Dfs_util(RedeSocial, IndiceDosAmigos[i], visitados);
+        }
+    }
+    
+    // Liberar a memória alocada para os índices
+    free(IndiceDosAmigos);
 }
 
 void Dfs(FriendFace* RedeSocial, const char* NomeUsuarioInicial) {
@@ -116,7 +147,6 @@ void Dfs(FriendFace* RedeSocial, const char* NomeUsuarioInicial) {
     printf("\n");
 }
 
-// Algoritmo BFS
 void Bfs(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const char* NomeUsuarioFinal) {
     int EnderecoInicial = EncontrarUsuario(RedeSocial, NomeUsuarioInicial);
     int EnderecoFinal = EncontrarUsuario(RedeSocial, NomeUsuarioFinal);
@@ -165,7 +195,6 @@ void Bfs(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const char* Nom
         printf("%s%s", RedeSocial->usuarios[caminho[i]].NomeUsuario, i == 0 ? "\n" : ", ");
 }
 
-// Algoritmo de Dijkstra
 void Dijkstra(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const char* NomeUsuarioFinal) {
     int EnderecoInicial = EncontrarUsuario(RedeSocial, NomeUsuarioInicial);
     int EnderecoFinal = EncontrarUsuario(RedeSocial, NomeUsuarioFinal);
@@ -175,38 +204,38 @@ void Dijkstra(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const char
         return;
     }
     
-    int dist[MAXIMO_USUARIOS], visitados[MAXIMO_USUARIOS], antecessor[MAXIMO_USUARIOS];
+    int Destino[MAXIMO_USUARIOS], visitados[MAXIMO_USUARIOS], antecessor[MAXIMO_USUARIOS];
     for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
-        dist[i] = INT_MAX;
+        Destino[i] = INT_MAX;
         visitados[i] = 0;
         antecessor[i] = -1;
     }
     
-    dist[EnderecoInicial] = 0;
+    Destino[EnderecoInicial] = 0;
     
     for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
         int u = -1;
         for (int j = 0; j < RedeSocial->NumeroDeUsuarios; j++) {
-            if (!visitados[j] && (u == -1 || dist[j] < dist[u]))
+            if (!visitados[j] && (u == -1 || Destino[j] < Destino[u]))
                 u = j;
         }
         
-        if (dist[u] == INT_MAX)
+        if (Destino[u] == INT_MAX)
             break;
         
         visitados[u] = 1;
         
         Amizade* Adjacente = RedeSocial->usuarios[u].ListaAdjacenteacencia;
         while (Adjacente) {
-            if (dist[u] + Adjacente->peso < dist[Adjacente->destino]) {
-                dist[Adjacente->destino] = dist[u] + Adjacente->peso;
+            if (Destino[u] + Adjacente->peso < Destino[Adjacente->destino]) {
+                Destino[Adjacente->destino] = Destino[u] + Adjacente->peso;
                 antecessor[Adjacente->destino] = u;
             }
             Adjacente = Adjacente->Proximo;
         }
     }
     
-    if (dist[EnderecoFinal] == INT_MAX) {
+    if (Destino[EnderecoFinal] == INT_MAX) {
         printf("Não há caminho de '%s' para '%s'.\n", NomeUsuarioInicial, NomeUsuarioFinal);
         return;
     }
@@ -215,12 +244,11 @@ void Dijkstra(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const char
     for (int v = EnderecoFinal; v != -1; v = antecessor[v])
         caminho[tam++] = v;
     
-    printf("Dijkstra de '%s' para '%s': Frequência: %d, Caminho: ", NomeUsuarioInicial, NomeUsuarioFinal, dist[EnderecoFinal]);
+    printf("Dijkstra de '%s' para '%s': Frequência: %d, Caminho: ", NomeUsuarioInicial, NomeUsuarioFinal, Destino[EnderecoFinal]);
     for (int i = tam - 1; i >= 0; i--)
         printf("%s%s", RedeSocial->usuarios[caminho[i]].NomeUsuario, i == 0 ? "\n" : ", ");
 }
 
-// Algoritmo Bellman-Ford
 void BellmanFord(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const char* NomeUsuarioFinal) {
     int EnderecoInicial = EncontrarUsuario(RedeSocial, NomeUsuarioInicial);
     int EnderecoFinal = EncontrarUsuario(RedeSocial, NomeUsuarioFinal);
@@ -230,20 +258,20 @@ void BellmanFord(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const c
         return;
     }
     
-    int dist[MAXIMO_USUARIOS], antecessor[MAXIMO_USUARIOS];
+    int Destino[MAXIMO_USUARIOS], antecessor[MAXIMO_USUARIOS];
     for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
-        dist[i] = INT_MAX;
+        Destino[i] = INT_MAX;
         antecessor[i] = -1;
     }
     
-    dist[EnderecoInicial] = 0;
+    Destino[EnderecoInicial] = 0;
     
     for (int i = 1; i < RedeSocial->NumeroDeUsuarios; i++) {
         for (int u = 0; u < RedeSocial->NumeroDeUsuarios; u++) {
             Amizade* Adjacente = RedeSocial->usuarios[u].ListaAdjacenteacencia;
             while (Adjacente) {
-                if (dist[u] != INT_MAX && dist[u] + Adjacente->peso < dist[Adjacente->destino]) {
-                    dist[Adjacente->destino] = dist[u] + Adjacente->peso;
+                if (Destino[u] != INT_MAX && Destino[u] + Adjacente->peso < Destino[Adjacente->destino]) {
+                    Destino[Adjacente->destino] = Destino[u] + Adjacente->peso;
                     antecessor[Adjacente->destino] = u;
                 }
                 Adjacente = Adjacente->Proximo;
@@ -255,7 +283,7 @@ void BellmanFord(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const c
     for (int u = 0; u < RedeSocial->NumeroDeUsuarios; u++) {
         Amizade* Adjacente = RedeSocial->usuarios[u].ListaAdjacenteacencia;
         while (Adjacente) {
-            if (dist[u] != INT_MAX && dist[u] + Adjacente->peso < dist[Adjacente->destino]) {
+            if (Destino[u] != INT_MAX && Destino[u] + Adjacente->peso < Destino[Adjacente->destino]) {
                 printf("Há um ciclo de interação negativa.\n");
                 return;
             }
@@ -263,7 +291,7 @@ void BellmanFord(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const c
         }
     }
     
-    if (dist[EnderecoFinal] == INT_MAX) {
+    if (Destino[EnderecoFinal] == INT_MAX) {
         printf("Não há caminho de '%s' para '%s'.\n", NomeUsuarioInicial, NomeUsuarioFinal);
         return;
     }
@@ -272,7 +300,7 @@ void BellmanFord(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const c
     for (int v = EnderecoFinal; v != -1; v = antecessor[v])
         caminho[tam++] = v;
     
-    printf("Bellman-Ford de '%s' para '%s': Frequência: %d, Caminho: ", NomeUsuarioInicial, NomeUsuarioFinal, dist[EnderecoFinal]);
+    printf("Bellman-Ford de '%s' para '%s': Frequência: %d, Caminho: ", NomeUsuarioInicial, NomeUsuarioFinal, Destino[EnderecoFinal]);
     for (int i = tam - 1; i >= 0; i--)
         printf("%s%s", RedeSocial->usuarios[caminho[i]].NomeUsuario, i == 0 ? "\n" : ", ");
 }
@@ -280,10 +308,8 @@ void BellmanFord(FriendFace* RedeSocial, const char* NomeUsuarioInicial, const c
 
 int main() {
 
-
     FriendFace* RedeSocial = CriaFriendFace();
-  
-    
+      
     AdicionarUsuario(RedeSocial, "Alice");
     AdicionarUsuario(RedeSocial, "Bob");
     AdicionarUsuario(RedeSocial, "Carlos");
@@ -301,17 +327,5 @@ int main() {
     BellmanFord(RedeSocial, "Alice", "Diana");
     GeraGraphviz(RedeSocial, "friendface.dot");
     
-/*
-
-      FriendFace* Redepolitica = CriaFriendFace();
-    AdicionarUsuario(Redepolitica, "thielo");
-    AdicionarUsuario(Redepolitica, "bolsonaro");
-    AdicionarUsuario(Redepolitica, "marçal");
-    AdicionarConexao(Redepolitica, "thielo", "marcal", 4);
-    AdicionarConexao(Redepolitica, "thielo", "Bolsonaro", 5);
-    AdicionarConexao(Redepolitica, "bolsonaro", "marcal", 2);
-    Bfs(Redepolitica, "thielo", "marcal");
-    GeraGraphviz(Redepolitica, "politica.dot");
-    */
     return 0;
 }
