@@ -293,8 +293,8 @@ int main() {
     printf("\nAlgoritmo de Bellman-Ford:\n");
     BellmanFord(RedeSocial, 0);
 
-    GeraGraphviz(RedeSocial, "friendf.dot");
-
+    GeraGraphviz(RedeSocial, "friendface3.dot");
+    // gerar a imagem : dot -Tpng NomeDoArquivoCriado.dot -o NomeDoArquivoASerGerado.png
    
     printf("\nLista de adjacências do grafo:\n");
     ImprimeListaAdjacencias(RedeSocial);

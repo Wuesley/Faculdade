@@ -1,7 +1,0 @@
-digraph FriendFace {
-  "Alice" -> "Carlos" [label="2"];
-  "Alice" -> "Bob" [label="4"];
-  "Bob" -> "Diana" [label="10"];
-  "Bob" -> "Carlos" [label="5"];
-  "Carlos" -> "Diana" [label="3"];
-}
