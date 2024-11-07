@@ -23,7 +23,7 @@ struct lista{
 typedef struct lista Lista;
 
 // Funções da lista
-Lista* cria_lista(void){
+Lista* CriaLista(void){
     Lista* l = (Lista*)malloc(sizeof(Lista));
     l->inicio = NULL;
     l->fim = NULL;
@@ -31,19 +31,19 @@ Lista* cria_lista(void){
     return l;
 }
 
-void insere_inicio(Lista* l, int valor, int peso) {
+void InsereInicio(Lista* l, int valor, int peso) {
     No* novo = (No*)malloc(sizeof(No));
     novo->valor = valor;
     novo->peso = peso;
     novo->proximo = l->inicio;
     l->inicio = novo;
-    if (l->fim == NULL) {
+    if(l->fim == NULL) {
         l->fim = novo;
     }
     l->tamanho++;
 }
 
-void imprime_lista(Lista* l) {
+void ImprimeLista(Lista* l) {
     No* aux = l->inicio;
     while (aux != NULL) {
         printf("%d(peso: %d) ", aux->valor, aux->peso);
@@ -51,19 +51,129 @@ void imprime_lista(Lista* l) {
     }
 }
 
-// Estruturas da rede social
-typedef struct Usuario{
+// Fila
+struct noFila {
+    int valor;
+    struct noFila* proximo;
+};
+typedef struct noFila NoFila;
+
+struct fila {
+    NoFila* inicio;
+    NoFila* fim;
+    int tamanho;
+};
+typedef struct fila Fila;
+
+Fila* CriaFila(void) {
+    Fila* f = (Fila*)malloc(sizeof(Fila));
+    f->inicio = NULL;
+    f->fim = NULL;
+    f->tamanho = 0;
+    return f;
+}
+
+int FilaVazia(Fila* f) {
+    return (f->inicio == NULL);
+}
+
+Fila* IserirNaFila(Fila* f, int num) {
+    NoFila* novo = (NoFila*)malloc(sizeof(NoFila));
+    novo->valor = num;
+    novo->proximo = NULL;
+
+    if (FilaVazia(f)) {
+        f->inicio = f->fim = novo;
+    } else {
+        f->fim->proximo = novo;
+        f->fim = novo;
+    }
+    f->tamanho++;
+    return f;
+}
+
+int RemoverDaFila(Fila* f) {
+    NoFila* aux;
+    int conteudo;
+
+    if (FilaVazia(f)) {
+        printf("\n\tFILA VAZIA\n");
+        exit(1);
+    } else {
+        aux = f->inicio;
+        conteudo = aux->valor;
+        f->inicio = f->inicio->proximo;
+
+        if (f->tamanho == 1) {
+            f->fim = NULL;
+        }
+        f->tamanho--;
+        free(aux);
+    }
+    return conteudo;
+}
+
+// Pilha
+struct noPilha {
+    int valor;
+    struct noPilha* proximo;
+};
+typedef struct noPilha NoPilha;
+
+struct pilha {
+    NoPilha* topo;
+    int tamanho;
+};
+typedef struct pilha Pilha;
+
+Pilha* CriaPilha(void) {
+    Pilha* p = (Pilha*)malloc(sizeof(Pilha));
+    p->topo = NULL;
+    p->tamanho = 0;
+    return p;
+}
+
+int PilhaVazia(Pilha* p) {
+    return (p->topo == NULL);
+}
+
+void PushEmpilha(Pilha* p, int num) {
+    NoPilha* novo = (NoPilha*)malloc(sizeof(NoPilha));
+    novo->valor = num;
+    novo->proximo = p->topo;
+    p->topo = novo;
+    p->tamanho++;
+}
+
+int PopDesempilha(Pilha* p) {
+    NoPilha* aux;
+    int v;
+    if (PilhaVazia(p)) {
+        printf("\nPILHA VAZIA\n");
+        exit(1);
+    } else {
+        aux = p->topo;
+        v = aux->valor;
+        p->topo = aux->proximo;
+        free(aux);
+        p->tamanho--;
+        return v;
+    }
+}
+
+// Estruturas e funções da rede social 
+struct usuario{
     char NomeUsuario[TAMANHO_MAXIMO_DE_CADA_NOME];
     Lista* ListaAdjacencia; // agora é do tipo lista encadeada
-} Usuario;
+};
+typedef struct usuario Usuario;
 
-typedef struct FriendFace{
+struct friendface{
     Usuario usuarios[MAXIMO_USUARIOS];
     int NumeroDeUsuarios;
-} FriendFace;
+};
+typedef struct friendface FriendFace;
 
-
-// Funções da rede social
 FriendFace* CriaFriendFace() {
     FriendFace* RedeSocial = (FriendFace*)malloc(sizeof(FriendFace));
     RedeSocial->NumeroDeUsuarios = 0;
@@ -81,7 +191,7 @@ int EncontrarUsuario(FriendFace* RedeSocial, const char* NomeUsuario) {
 void AdicionarUsuario(FriendFace* RedeSocial, const char* NomeUsuario) {
     if (RedeSocial->NumeroDeUsuarios < MAXIMO_USUARIOS) {
         strcpy(RedeSocial->usuarios[RedeSocial->NumeroDeUsuarios].NomeUsuario, NomeUsuario);
-        RedeSocial->usuarios[RedeSocial->NumeroDeUsuarios].ListaAdjacencia = cria_lista();
+        RedeSocial->usuarios[RedeSocial->NumeroDeUsuarios].ListaAdjacencia = CriaLista();
         RedeSocial->NumeroDeUsuarios++;
     } else {
         printf("Erro: Limite de usuários atingido.\n");
@@ -95,7 +205,7 @@ void AdicionarConexao(FriendFace* RedeSocial, const char* NomeUsuario_origem, co
         printf("Erro: Usuário não encontrado.\n");
         return;
     }
-    insere_inicio(RedeSocial->usuarios[EnderecoOrigem].ListaAdjacencia, EnderecoDestino, peso);
+    InsereInicio(RedeSocial->usuarios[EnderecoOrigem].ListaAdjacencia, EnderecoDestino, peso);
 }
 
 void GeraGraphviz(FriendFace* RedeSocial, const char* NomeUsuario_arquivo) {
@@ -122,65 +232,112 @@ void GeraGraphviz(FriendFace* RedeSocial, const char* NomeUsuario_arquivo) {
     fclose(file);
 }
 
+void ImprimirCaminho(int predecessores[], int destino, FriendFace* RedeSocial){
+    if (destino == -1) {
+        printf("Não há caminho entre o usuário de origem e destino.\n");
+        return;
+    }
+    if (predecessores[destino] != -1) {
+        ImprimirCaminho(predecessores, predecessores[destino], RedeSocial);
+    }
+    printf("%s ", RedeSocial->usuarios[destino].NomeUsuario);
+}
 
-// Implementação do algoritmo BFS
-void BFS(FriendFace* RedeSocial, int inicio) {
+void ImprimeListaAdjacencias(FriendFace* RedeSocial) {
+    for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
+        printf("Vértice %s:", RedeSocial->usuarios[i].NomeUsuario);
+        No* aux = RedeSocial->usuarios[i].ListaAdjacencia->inicio;
+        while (aux != NULL) {
+            printf(" -> %s(peso: %d)", RedeSocial->usuarios[aux->valor].NomeUsuario, aux->peso);
+            aux = aux->proximo;
+        }
+        printf("\n");
+    }
+}
 
+
+//GRAFOS
+void DFS(FriendFace* RedeSocial, int inicio) {
     bool visitado[MAXIMO_USUARIOS] = {false};
-    int fila[MAXIMO_USUARIOS];
-    int frente = 0, tras = 0;
-    
-    visitado[inicio] = true;
-    fila[tras++] = inicio;
+    char resultado[500] = ""; // Armazena a sequência dos usuários visitados
 
-    while (frente < tras) {
-        int usuario = fila[frente++];
-        printf("Visitando %s\n", RedeSocial->usuarios[usuario].NomeUsuario);
+    Pilha* pilha = CriaPilha();  // Criamos uma pilha
+    PushEmpilha(pilha, inicio);  // Colocamos o usuário inicial na pilha
+
+    while (!PilhaVazia(pilha)) {
+        int usuario = PopDesempilha(pilha);  // Retiramos um usuário da pilha
+
+        if (!visitado[usuario]) {
+            visitado[usuario] = true;
+            // Adiciona o usuário ao resultado
+            strcat(resultado, RedeSocial->usuarios[usuario].NomeUsuario);
+            strcat(resultado, ", ");
+
+            // Colocamos os vizinhos não visitados na pilha
+            No* adjacente = RedeSocial->usuarios[usuario].ListaAdjacencia->inicio;
+            while (adjacente != NULL) {
+                if (!visitado[adjacente->valor]) {
+                    PushEmpilha(pilha, adjacente->valor);  // Empilhamos o vizinho
+                }
+                adjacente = adjacente->proximo;
+            }
+        }
+    }
+
+    // Removemos a vírgula final
+    if (strlen(resultado) > 2) resultado[strlen(resultado) - 2] = '\0';
+
+    printf("DFS a partir de '%s': %s\n", RedeSocial->usuarios[inicio].NomeUsuario, resultado);
+
+    free(pilha);  // Libera a memória da pilha
+}
+
+void BFS(FriendFace* RedeSocial, int inicio, int destino) {
+    bool visitado[MAXIMO_USUARIOS] = {false};
+    int predecessores[MAXIMO_USUARIOS];
+    for (int i = 0; i < MAXIMO_USUARIOS; i++) predecessores[i] = -1;
+
+    Fila* fila = CriaFila();  // Criando uma fila
+    visitado[inicio] = true;
+    IserirNaFila(fila, inicio);
+
+    while (!FilaVazia(fila)) {
+        int usuario = RemoverDaFila(fila);  // Retiramos um usuário da fila
+
+        if (usuario == destino) break;
 
         No* adjacente = RedeSocial->usuarios[usuario].ListaAdjacencia->inicio;
         while (adjacente != NULL) {
             if (!visitado[adjacente->valor]) {
                 visitado[adjacente->valor] = true;
-                fila[tras++] = adjacente->valor;
+                predecessores[adjacente->valor] = usuario;
+                IserirNaFila(fila, adjacente->valor);  // Inserimos na fila
             }
             adjacente = adjacente->proximo;
         }
     }
+
+    printf("BFS de '%s' para '%s': ", RedeSocial->usuarios[inicio].NomeUsuario, RedeSocial->usuarios[destino].NomeUsuario);
+    ImprimirCaminho(predecessores, destino, RedeSocial);
+    printf("\n");
+
+    free(fila);  // Libera a memória da fila
 }
 
-// Implementação do algoritmo DFS
-void DFS(FriendFace* RedeSocial, int usuario, bool visitado[]) {
+void Dijkstra(FriendFace* RedeSocial, int origem, int destino) {
 
-    printf("Visitando %s\n", RedeSocial->usuarios[usuario].NomeUsuario);
-    visitado[usuario] = true;
-
-    No* adjacente = RedeSocial->usuarios[usuario].ListaAdjacencia->inicio;
-    while (adjacente != NULL) {
-        if (!visitado[adjacente->valor]) {
-            DFS(RedeSocial, adjacente->valor, visitado);
-        }
-        adjacente = adjacente->proximo;
-    }
-}
-
-void iniciarDFS(FriendFace* RedeSocial, int inicio) {
-    bool visitado[MAXIMO_USUARIOS] = {false};
-    DFS(RedeSocial, inicio, visitado);
-}
-
-// Implementação do algoritmo de Dijkstra
-void Dijkstra(FriendFace* RedeSocial, int origem) {
     int distancia[MAXIMO_USUARIOS];
     bool visitado[MAXIMO_USUARIOS] = {false};
-
+    int predecessores[MAXIMO_USUARIOS];
     for (int i = 0; i < MAXIMO_USUARIOS; i++) {
         distancia[i] = INT_MAX;
+        predecessores[i] = -1;
     }
     distancia[origem] = 0;
 
     for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
         int minDistancia = INT_MAX, u = -1;
-        
+
         for (int j = 0; j < RedeSocial->NumeroDeUsuarios; j++) {
             if (!visitado[j] && distancia[j] < minDistancia) {
                 minDistancia = distancia[j];
@@ -197,26 +354,31 @@ void Dijkstra(FriendFace* RedeSocial, int origem) {
             int peso = adjacente->peso;
             if (distancia[u] + peso < distancia[v]) {
                 distancia[v] = distancia[u] + peso;
+                predecessores[v] = u;
             }
             adjacente = adjacente->proximo;
         }
     }
 
-    // Imprime as distâncias calculadas
-    for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
-        printf("Distância de %s até %s: %d\n", RedeSocial->usuarios[origem].NomeUsuario, RedeSocial->usuarios[i].NomeUsuario, distancia[i]);
-    }
+    printf("Dijkstra de '%s' para '%s': Frequência: %d, Caminho: ", 
+           RedeSocial->usuarios[origem].NomeUsuario, 
+           RedeSocial->usuarios[destino].NomeUsuario, 
+           distancia[destino]);
+    ImprimirCaminho(predecessores, destino, RedeSocial);
+    printf("\n");
 }
 
-// Implementação do algoritmo de Bellman-Ford
-void BellmanFord(FriendFace* RedeSocial, int origem) {
+void BellmanFord(FriendFace* RedeSocial, int origem, int destino) {
     int distancia[MAXIMO_USUARIOS];
+    int predecessores[MAXIMO_USUARIOS];
     for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
         distancia[i] = INT_MAX;
+        predecessores[i] = -1;
     }
     distancia[origem] = 0;
 
-    for (int i = 1; i < RedeSocial->NumeroDeUsuarios; i++) {
+    // Relaxamento das arestas
+    for (int i = 0; i < RedeSocial->NumeroDeUsuarios - 1; i++) {
         for (int u = 0; u < RedeSocial->NumeroDeUsuarios; u++) {
             No* adjacente = RedeSocial->usuarios[u].ListaAdjacencia->inicio;
             while (adjacente != NULL) {
@@ -224,6 +386,7 @@ void BellmanFord(FriendFace* RedeSocial, int origem) {
                 int peso = adjacente->peso;
                 if (distancia[u] != INT_MAX && distancia[u] + peso < distancia[v]) {
                     distancia[v] = distancia[u] + peso;
+                    predecessores[v] = u;
                 }
                 adjacente = adjacente->proximo;
             }
@@ -237,31 +400,22 @@ void BellmanFord(FriendFace* RedeSocial, int origem) {
             int v = adjacente->valor;
             int peso = adjacente->peso;
             if (distancia[u] != INT_MAX && distancia[u] + peso < distancia[v]) {
-                printf("Ciclo negativo detectado!\n");
+                printf("O grafo contém um ciclo negativo!\n");
                 return;
             }
             adjacente = adjacente->proximo;
         }
     }
 
-    // Imprime as distâncias calculadas
-    for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
-        printf("Distância de %s até %s: %d\n", RedeSocial->usuarios[origem].NomeUsuario, RedeSocial->usuarios[i].NomeUsuario, distancia[i]);
-    }
+    printf("Bellman-Ford de '%s' para '%s': Frequência: %d, Caminho: ", 
+           RedeSocial->usuarios[origem].NomeUsuario, 
+           RedeSocial->usuarios[destino].NomeUsuario, 
+           distancia[destino]);
+    ImprimirCaminho(predecessores, destino, RedeSocial);
+    printf("\n");
 }
 
 
-void ImprimeListaAdjacencias(FriendFace* RedeSocial) {
-    for (int i = 0; i < RedeSocial->NumeroDeUsuarios; i++) {
-        printf("Vértice %s:", RedeSocial->usuarios[i].NomeUsuario);
-        No* aux = RedeSocial->usuarios[i].ListaAdjacencia->inicio;
-        while (aux != NULL) {
-            printf(" -> %s(peso: %d)", RedeSocial->usuarios[aux->valor].NomeUsuario, aux->peso);
-            aux = aux->proximo;
-        }
-        printf("\n");
-    }
-}
 
 
 int main() {
@@ -281,23 +435,20 @@ int main() {
     AdicionarConexao(RedeSocial, "Bob", "Diana", 10);
     AdicionarConexao(RedeSocial, "Carlos", "Diana", 3);
 
-    printf("Busca em Largura (BFS):\n");
-    BFS(RedeSocial, 0);
+    DFS(RedeSocial, EncontrarUsuario(RedeSocial, "Alice"));
 
-    printf("\nBusca em Profundidade (DFS):\n");
-    iniciarDFS(RedeSocial, 0);
+    BFS(RedeSocial, EncontrarUsuario(RedeSocial, "Alice"), EncontrarUsuario(RedeSocial, "Diana"));
 
-    printf("\nAlgoritmo de Dijkstra:\n");
-    Dijkstra(RedeSocial, 0);
+    Dijkstra(RedeSocial, EncontrarUsuario(RedeSocial, "Alice"), EncontrarUsuario(RedeSocial, "Diana"));
 
-    printf("\nAlgoritmo de Bellman-Ford:\n");
-    BellmanFord(RedeSocial, 0);
+    BellmanFord(RedeSocial, EncontrarUsuario(RedeSocial, "Alice"), EncontrarUsuario(RedeSocial, "Diana"));
 
-    GeraGraphviz(RedeSocial, "friendface3.dot");
-    // gerar a imagem : dot -Tpng NomeDoArquivoCriado.dot -o NomeDoArquivoASerGerado.png
+    GeraGraphviz(RedeSocial, "friendface.dot");
    
     printf("\nLista de adjacências do grafo:\n");
     ImprimeListaAdjacencias(RedeSocial);
+
+ // Comando para gerar a imagem : dot -Tpng NomeDoArquivoCriado.dot -o NomeDoArquivoASerGerado.png
 
     return 0;
 }
